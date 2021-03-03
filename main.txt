@@ -1,0 +1,114 @@
+let model;
+let targetLabel = 'C'; 
+//a variable with a defaut value of C
+let trainingData = [];
+//set the variable equal to an array
+let state = 'collection'
+//the beginning of the state of the program would be collection
+
+function setup() {
+  createCanvas(400, 400);
+  
+  //An object that stores the properties of the neural network
+  let options = {
+    inputs: ['x','y'],
+    //Naming the two inputs
+    outputs: ['label'],
+    //The singular result the label that it has classified the inputs in
+    task: 'classification',
+    /*The task that the model is trying to do
+    To classify the inputs into one of three discrete catergory. 
+    */
+    debug: 'true'
+    //gets a much better tool than the callbacks
+    
+  };
+  model = ml5.neuralNetwork(options);
+  //Passing the object into ml5 neural Network.  
+  background(255);
+}
+
+function keyPressed(){
+  
+  if (key == 't') {
+    //pressing the key t would start the training.
+    state = 'training'
+    //when the t key is pressed, we are in the training state. 
+    console.log('starting training.');
+    //to know that the training process has started.c
+    model.normalizeData();
+    //in order to squash the input data into a range of 0 and 1
+    let option = {
+      epochs: 200
+      //sending all the data points into the network 200 times. 
+    }
+    model.train(option, whileTraining, finishedTraining);
+    //whileTraining callback is executed every epoch
+    //finishedTraining callback is executed when the whole thing is finished
+  } else{
+  
+  targetLabel = key.toUpperCase();
+  //set the targetLabel variable to the key that is pressed
+  //set the key that is pressed to uppercase 
+  }
+}
+
+function whileTraining(epoch, loss) {
+  console.log(epoch);
+  //To see what is happening when it is training
+  //loss is the error of the model's guesses
+}
+
+function finishedTraining() {
+  console.log('finished training.');
+  //To see that it has finished training
+  state = 'prediction'
+  //when it has finished training, the state is prediction.
+}
+
+function mousePressed() {
+  
+  let inputs = {
+    x: mouseX,
+    y: mouseY
+  }
+  if (state == 'collection') {
+  //when the state is collection, that is when we want to set the target label and add the data to the model. 
+    let target = {
+      //the target outputs that we want the neural network to learn
+      label: targetLabel
+    }
+    model.addData(inputs, target);
+  //where the model can accept training data as pairs of inputs and target. 
+    stroke(0);
+    noFill();
+    ellipse(mouseX, mouseY, 24);
+    fill(0);
+    noStroke();
+    textAlign(CENTER,CENTER);
+    text(targetLabel, mouseX, mouseY);
+    //Wherever the mouse clicks, the letter that is pressed would show in an ellipse
+    //drawing the circles during the collection process because if the state is prediction, the model will instead classify the inputs
+  } else if (state == 'prediction') {
+    model.classify(inputs, gotResults)
+  }
+}
+
+function gotResults(error, results) {
+  //there is an error or there is a result
+  if (error) {
+    console.error(error);
+    return;
+    //if there is an error, it won't do anything, otherwise it will show the results. 
+  }
+  console.log(results);
+  stroke(0);
+  fill(0,0,255,100);
+  //fill the circle in blue, so it is easier to differentiate from the training data
+  ellipse(mouseX, mouseY, 24);
+  fill(0);
+  noStroke();
+  textAlign(CENTER,CENTER);
+  text(results[0].label, mouseX, mouseY);  
+  //shows the result of the prediction
+}
